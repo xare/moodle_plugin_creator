@@ -1,5 +1,7 @@
 #!/usr/bin/env php
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
 
 define('CLI_SCRIPT', true);
 require(dirname(dirname(dirname(dirname(__FILE__)))) . '/config.php');
@@ -10,7 +12,7 @@ list($options, $unrecognized) = cli_get_params(
     array('h' => 'help', 'n' => 'name', 'l'=>'languages')
 );
 
-if ($options['help'] || !$options['name']) {
+if ($options['help'] || !$options['name'] || !$options['languages']) {
     $help = "Create a new local Moodle plugin.
 
 Options:
@@ -55,7 +57,7 @@ if ($options['languages']) {
     $langs = explode(',', $options['languages']);
     foreach ($langs as $lang) {
         $lang = trim($lang);
-        $langdir = $plugindir . "/lang/$lang";
+        $langdir = $plugindir . "/lang/".$lang;
         mkdir($langdir, 0777, true);
         
         // Sample language string file content.
@@ -63,14 +65,16 @@ if ($options['languages']) {
 \$string['pluginname'] = 'My $name plugin';
 // Add more language strings as needed.
 ";
-        file_put_contents($langdir . "/local_$name.php", $langcontent);
-        echo "The file for the ".$lang." language was created";
+        $result = file_put_contents($langdir . "/local_$name.php", $langcontent);
+        if ($result === false) {
+            echo "Failed to write to $langdir/local_$name.php\n";
+        } else {
+            echo "The file for the ".$lang." language was created";
+        }
     }
 }
 
-
 mkdir($plugindir . '/db');
 mkdir($plugindir . '/classes');
-
-
+mkdir($plugindir . '/templates');
 echo "Plugin '$name' created successfully!\n";
